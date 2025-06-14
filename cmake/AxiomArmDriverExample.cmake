@@ -1,0 +1,2 @@
+add_executable(AxiomArmDriverExample ${CMAKE_CURRENT_SOURCE_DIR}/example/basic.cpp)
+target_link_libraries(AxiomArmDriverExample PRIVATE AxiomArmDriver::AxiomArmDriver)
