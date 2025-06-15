@@ -1,5 +1,7 @@
 #include "AxiomArmDriver.hpp"
 
+#include <cmath>
+
 using HyPWM::PWMController;
 using std::make_unique;
 
@@ -17,7 +19,7 @@ AxiomArmDriver::AxiomArmDriver()
         {
             throw std::runtime_error(result.error());
         }
-        if (const auto result = joint->setPeriod(30000000); !result)
+        if (const auto result = joint->setPeriod(20000); !result)
         {
             throw std::runtime_error(result.error());
         }
@@ -42,5 +44,16 @@ AxiomArmDriver::Result AxiomArmDriver::disable(const uint8_t joint) const noexce
 
 AxiomArmDriver::Result AxiomArmDriver::rotate(const uint8_t joint, const double angle) const noexcept
 {
-    return joints[joint]->setDutyCycle(static_cast<uint32_t>(angle));
+    constexpr double min_angle_deg = 0.0;
+    constexpr double max_angle_deg = 180.0;
+    constexpr double min_pulse_width_ns = 500.0;
+    constexpr double max_pulse_width_ns = 2500.0;
+
+    const double clamped_angle = std::clamp(angle, min_angle_deg, max_angle_deg);
+    const double pulse_width_ns = min_pulse_width_ns + (clamped_angle / max_angle_deg) * (max_pulse_width_ns -
+        min_pulse_width_ns);
+    const auto duty_cycle_ns = static_cast<uint32_t>(std::round(pulse_width_ns));
+
+
+    return joints[joint]->setDutyCycle(duty_cycle_ns);
 }
